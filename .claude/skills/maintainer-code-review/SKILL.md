@@ -54,6 +54,31 @@ checks below bite, and say "no findings" when that is true.
 - **Mechanical slips.** Identical ternary arms, typos in identifiers and XML docs (#902). Match surrounding
   formatting (#965).
 
+## 1a. Upstream sources of truth
+
+This client does not define server or driver behaviour; it follows it. When a change adds or alters a command,
+capability or default, check it against the owning upstream, and say which one you used. Do not rely on memory.
+
+| Area | Upstream | What to check |
+|---|---|---|
+| Server, base path, `mobile:` extension model, Appium 3 removals | `appium/appium` | Route is not deprecated or removed; `--base-path` and server arguments behave as assumed (#1006, #902). |
+| Android | `appium-uiautomator2-driver`; Espresso driver for Espresso tests | Command and argument names against its execute-methods reference (the README table links to it, #939, #986). |
+| iOS | `appium-xcuitest-driver` | `mobile:` command names and argument shapes, for example `installApp` (#1068, #1031). |
+| macOS | Mac2 driver | Command names and capabilities; the repo has a `Mac` folder and tests but links no driver repository. |
+| Windows | `appium-windows-driver`; NovaWindows driver (third party) | Not the unmaintained WinAppDriver. A Wincore driver is only in open PR #1159, so do not assume it exists on `main`. |
+| Selenium .NET binding | `SeleniumHQ/selenium` (`Selenium.WebDriver` on NuGet) | See below. |
+
+Selenium .NET is the most influential upstream because `Appium.WebDriver` extends it:
+
+- Check new or changed Selenium types and members that the change touches for deprecation. For example, the
+  `Response` constructor change in Selenium 4.30 forced test updates (#910).
+- Keep the supported Selenium range open. Raise the minimum only when a Selenium release forces a client change,
+  and let Dependabot keep exercising newer versions in CI (#980, README compatibility matrix).
+- Changes that follow a Selenium release, such as strong-name signing aligned with Selenium 4.44.0, are breaking for
+  consumers and need the `!` or `BREAKING CHANGE:` title (#1118).
+- When an upstream behaviour cannot be confirmed from the diff or the repo, report it under "Not verified" and name
+  the upstream document to consult. Do not invent driver behaviour.
+
 ## 2. Tests (`test/integration/`)
 
 - **Server-free where possible.** Client-side logic (caching, builders, guard clauses, URI parsing, retry logic)
